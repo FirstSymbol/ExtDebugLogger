@@ -1,0 +1,16 @@
+{
+    "name": "ExtDebugLogger.Editor",
+    "rootNamespace": "",
+    "references": [
+        "ExtDebugLogger"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
