@@ -10,8 +10,8 @@ namespace ExtDebugLogger.Configs
     [field: ExtDebugLoggerTags]
     public Dictionary<LogTag, Color> ColorDictionary { get; private set; } = new()
     {
-      { LogTag.Default, Color.white },
-      { LogTag.ExtDebugLogger, Color.coral }
+      { LogTag.Default, new Color(1f, 1f, 1f, 1f) },
+      { LogTag.ExtDebugLogger, new Color(1f, 0.4980392f, 0.3137255f, 1f) }
     };
   }
 }
