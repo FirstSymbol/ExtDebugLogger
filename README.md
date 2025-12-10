@@ -29,7 +29,7 @@ public class ColorTagsConfig : ScriptableObject, IKeepSeriaizableLoggerTags<Exam
 }
 ```
 #### Inspector
-![image]()
+<img width="587" height="284" alt="InspectorView" src="https://github.com/user-attachments/assets/b29fac6f-6c0f-4235-ad4e-58117d50d853" /><br>
 ### Create static csharp config parameters
 #### Code
 ```csharp
@@ -58,4 +58,4 @@ private void Awake()
 }
 ```
 #### Editor
-![image]()
+<img width="513" height="432" alt="Unity_X71tObR2Bo" src="https://github.com/user-attachments/assets/f29af623-5855-435c-ae00-35e743146e94" /><br>
