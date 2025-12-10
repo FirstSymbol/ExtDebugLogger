@@ -1,6 +1,9 @@
 <span style="font-family:monospace;">
 
 # ExtDebugLogger
+
+### Supported versions
+- Unity 2022.3.62f2 and later
 ## Installation
 1. Install all dependencies plugins:
     - [ExtInspectorTools](https://github.com/FirstSymbol/ExtInspectorTools);
