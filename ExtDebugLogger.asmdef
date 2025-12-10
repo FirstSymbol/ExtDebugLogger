@@ -2,7 +2,8 @@
     "name": "ExtDebugLogger",
     "rootNamespace": "",
     "references": [
-        "ExtInspectorTools"
+        "ExtInspectorTools",
+        "ExtDebugLogger.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
