@@ -11,6 +11,7 @@
     - From package manager - https://github.com/FirstSymbol/ExtDebugLogger.git
     - From file - download and drop in project folder.
 ## How to use
+0. Go to `Project settings -> Player -> Other Settings -> Script Define Symbols` and add define `DEV` id you need to call Logger in build.
 1. Configure colors:
    - Create default static csharp class and implement interface [IKeepDefaultLoggerTags](./Scripts/Interfaces/IKeepDefaultLoggerTags.cs) or create field
      ```csharp
