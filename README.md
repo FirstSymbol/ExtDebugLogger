@@ -17,11 +17,11 @@
      ```csharp
      [access modifier] static Dictionary<[any enum], UnityEngine.Color> [any name]
      ```
-     and mark this field with attribute **[ExtDebbugLoggerTag]**
+     and mark this field with attribute **[ExtDebugLoggerTag]**
    - You can also create a non-static field in a C# class that does not have a constructor, or the constructor is not internal or protected, and does not contain parameters.
      - This class will be created using reflection, and the color values will be obtained from it after the class is created.
      - <u>**It is important that the empty constructor of the class and all the code inside it will be called when data is received!**</u>
-   - Create simple SerializableObject and implement interface [IKeepSerializableLoggerTags](./Scripts/Interfaces/IKeepSerializableLoggerTags.cs) and mark this field with attribute **[ExtDebbugLoggerTag]**
+   - Create simple SerializableObject and implement interface [IKeepSerializableLoggerTags](./Scripts/Interfaces/IKeepSerializableLoggerTags.cs) and mark this field with attribute **[ExtDebugLoggerTag]**
 2. Execute static Logger methods with 2 parameters: string, enum. See the examples below.
 
 ## Examples
