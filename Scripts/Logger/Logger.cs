@@ -12,7 +12,7 @@ namespace ExtDebugLogger
     {
         private static readonly Enum[] _tagsToExclude = { };
 
-        private static Dictionary<Enum, Color> _tagColors => TagsAssembler.ColorTags;
+        private static IReadOnlyDictionary<Enum, Color> _tagColors => TagsAssembler.ColorTags;
 
         private static bool IsColoredLogs => true;
         

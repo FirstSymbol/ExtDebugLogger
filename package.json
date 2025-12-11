@@ -1,7 +1,7 @@
 {
   "name": "com.firstsymbol.extdebuglogger",
   "displayName": "ExtDebugLogger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentationUrl": "https://github.com/FirstSymbol/ExtDebugLogger.git",
   "description": "Extended unity debug logger.",
   "homepage": "https://github.com/FirstSymbol/ExtDebugLogger#readme",

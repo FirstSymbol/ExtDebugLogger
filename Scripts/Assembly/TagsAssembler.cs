@@ -1,150 +1,158 @@
-﻿#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ExtDebugLogger.Attributes;
 using ExtDebugLogger.Interfaces;
 using ExtInspectorTools;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace ExtDebugLogger
 {
-  public static partial class TagsAssembler
-  {
-    static Type _defaultType = typeof(Dictionary<,>);
-    static Type _serializableType = typeof(SerializableDictionary<,>);
-    private static Dictionary<Enum, Color> _defaultFields;
-    private static Dictionary<Enum, Color> _serializableFields;
-    public static Dictionary<Enum, Color> ColorTags { get; private set; }
+    public static class TagsAssembler
+    {
+        private static readonly Type DefaultDictType = typeof(Dictionary<,>);
+        private static readonly Type SerializableDictType = typeof(SerializableDictionary<,>);
+
+        public static IReadOnlyDictionary<Enum, Color> ColorTags { get; private set; } = new Dictionary<Enum, Color>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        private static void InitializeRuntime() => Initialize();
 
 #if UNITY_EDITOR
-    [InitializeOnLoadMethod]
-    private static void EditorRun()
-    {
-      Initialize();
-    }
+        [InitializeOnLoadMethod]
+        private static void InitializeEditor()
+        {
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                Initialize();
+        }
 #endif
-    
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
-    private static void Runtime()
-    {
-      Initialize();
-    }
 
-    internal static void Initialize()
-    {
-      _defaultFields = FindFields(_defaultType);
-      _serializableFields = FindFields(_serializableType);
-      ValidateDicts();
-      ColorTags = _defaultFields.Union(_serializableFields).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-      
-      Logger.Log($"{ColorTags.Count} tags successfully loaded.", LogTag.ExtDebugLogger);
-    }
-
-    private static void ValidateDicts()
-    {
-      _defaultFields ??= new Dictionary<Enum, Color>();
-      _serializableFields ??= new Dictionary<Enum, Color>();
-    }
-
-    private static Dictionary<Enum, Color> FindFields(Type genericDef)
-    {
-      Type openInterface = genericDef == typeof(Dictionary<,>) ? typeof(IKeepDefaultLoggerTags<>) : typeof(IKeepSeriaizableLoggerTags<>);
-
-      var providerTypes = AppDomain.CurrentDomain.GetAssemblies()
-        .SelectMany(a => a.GetTypes())
-        .Where(t => t.IsClass && !t.IsAbstract && t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == openInterface))
-        .ToList();
-
-      var staticEntries = providerTypes
-        .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-          .Where(f => f.FieldType.IsGenericType && f.FieldType.GetGenericTypeDefinition() == genericDef &&
-                      f.FieldType.GetGenericArguments() is { Length: 2 } args && args[0].IsEnum && args[1] == typeof(Color) &&
-                      f.GetCustomAttributes(typeof(Attributes.ExtDebugLoggerTags), true).Any())
-          .Select(f => ExtractEntries(f.GetValue(null), genericDef))
-          .Concat(t.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-            .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == genericDef &&
-                        p.PropertyType.GetGenericArguments() is { Length: 2 } args && args[0].IsEnum && args[1] == typeof(Color) &&
-                        p.GetCustomAttributes(typeof(Attributes.ExtDebugLoggerTags), true).Any())
-            .Select(p => ExtractEntries(p.GetValue(null), genericDef))))
-        .SelectMany(e => e);
-
-      var instanceEntries = providerTypes
-        .SelectMany(t =>
+        private static void Initialize()
         {
-          object[] instances;
-          if (typeof(ScriptableObject).IsAssignableFrom(t))
-          {
-            instances = Resources.FindObjectsOfTypeAll(t);
-          }
-          else
-          {
-            var ctor = t.GetConstructor(Type.EmptyTypes);
-            instances = ctor != null ? new object[] { Activator.CreateInstance(t) } : new object[0];
-          }
-          return instances.Select(instance => (t, instance));
-        })
-        .SelectMany(ti =>
+            var defaultTags      = CollectTags(DefaultDictType, typeof(IKeepDefaultLoggerTags<>));
+            var serializableTags = CollectTags(SerializableDictType, typeof(IKeepSeriaizableLoggerTags<>));
+
+            var combined = new Dictionary<Enum, Color>(defaultTags);
+            foreach (var kvp in serializableTags)
+                combined[kvp.Key] = kvp.Value; // SerializableDictionary overwrites in case of conflict
+
+            ColorTags = combined;
+
+            Logger.Log($"{ColorTags.Count} colored tags successfully loaded " +
+                      $"(default & static: {defaultTags.Count}, serializable: {serializableTags.Count}).", LogTag.ExtDebugLogger);
+        }
+
+        private static Dictionary<Enum, Color> CollectTags(Type openDictType, Type openInterfaceType)
         {
-          var t = ti.t;
-          var instance = ti.instance;
-          return t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-            .Where(f => f.FieldType.IsGenericType && f.FieldType.GetGenericTypeDefinition() == genericDef &&
-                        f.FieldType.GetGenericArguments() is { Length: 2 } args && args[0].IsEnum && args[1] == typeof(Color) &&
-                        f.GetCustomAttributes(typeof(Attributes.ExtDebugLoggerTags), true).Any())
-            .Select(f => ExtractEntries(f.GetValue(instance), genericDef))
-            .Concat(t.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-              .Where(p => p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == genericDef &&
-                          p.PropertyType.GetGenericArguments() is { Length: 2 } args && args[0].IsEnum && args[1] == typeof(Color) &&
-                          p.GetCustomAttributes(typeof(Attributes.ExtDebugLoggerTags), true).Any())
-              .Select(p => ExtractEntries(p.GetValue(instance), genericDef)));
-        })
-        .SelectMany(e => e);
+            var result = new Dictionary<Enum, Color>();
 
-      return staticEntries.Concat(instanceEntries)
-        .ToDictionary(de => (Enum)de.Key, de => (Color)de.Value);
+            var providers = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => t.IsClass && !t.IsAbstract && ImplementsGenericInterface(t, openInterfaceType))
+                .ToArray();
+
+            foreach (var provider in providers)
+            {
+                // Static fields
+                CollectFromFields(provider, BindingFlags.Static, null, openDictType, result);
+
+                // ScriptableObjects
+                if (typeof(ScriptableObject).IsAssignableFrom(provider))
+                {
+                    foreach (var instance in LoadAllScriptableObjects(provider))
+                        CollectFromFields(provider, BindingFlags.Instance, instance, openDictType, result);
+                }
+                // Default csharp fields in classes with an empty constructor
+                else if (provider.GetConstructor(Type.EmptyTypes) != null)
+                {
+                    var instance = Activator.CreateInstance(provider);
+                    CollectFromFields(provider, BindingFlags.Instance, instance, openDictType, result);
+                }
+            }
+
+            return result;
+        }
+
+        private static bool ImplementsGenericInterface(Type type, Type openInterfaceType)
+        {
+            return type.GetInterfaces()
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == openInterfaceType);
+        }
+
+        private static void CollectFromFields(Type type, BindingFlags flags, object instance, Type openDictType, Dictionary<Enum, Color> result)
+        {
+            var fields = type.GetFields(flags | BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(f => f.GetCustomAttribute<ExtDebugLoggerTags>() != null &&
+                            IsValidDictionaryType(f.FieldType, openDictType));
+
+            foreach (var field in fields)
+            {
+                var dict = field.GetValue(instance);
+                if (dict != null)
+                    MergeTags(dict, result);
+            }
+        }
+
+        private static bool IsValidDictionaryType(Type fieldType, Type openDictType)
+        {
+            if (!fieldType.IsGenericType) return false;
+            if (fieldType.GetGenericTypeDefinition() != openDictType) return false;
+
+            var args = fieldType.GetGenericArguments();
+            return args.Length == 2 && args[0].IsEnum && args[1] == typeof(Color);
+        }
+
+        private static void MergeTags(object dictionary, Dictionary<Enum, Color> target)
+        {
+            if (dictionary is IEnumerable enumerable)
+            {
+                foreach (var item in enumerable)
+                {
+                    if (item == null) continue;
+
+                    var itemType = item.GetType();
+                    if (!itemType.IsGenericType) continue;
+                    if (itemType.GetGenericTypeDefinition() != typeof(KeyValuePair<,>)) continue;
+
+                    var keyProp = itemType.GetProperty("Key");
+                    var valueProp = itemType.GetProperty("Value");
+
+                    if (keyProp == null || valueProp == null) continue;
+
+                    var key = keyProp.GetValue(item);
+                    var value = valueProp.GetValue(item);
+
+                    if (key is Enum enumKey && value is Color color)
+                    {
+                        target[enumKey] = color;
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<ScriptableObject> LoadAllScriptableObjects(Type type)
+        {
+#if UNITY_EDITOR
+            var guids = AssetDatabase.FindAssets($"t:{type.Name}");
+            foreach (var guid in guids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
+                if (asset != null && asset.GetType() == type)
+                    yield return asset;
+            }
+#else
+            foreach (var obj in Resources.FindObjectsOfTypeAll(type))
+            {
+                if (obj is ScriptableObject so)
+                    yield return so;
+            }
+#endif
+        }
     }
-
-    private static IEnumerable<KeyValuePair<object, object>> ExtractEntries(object dictObj, Type genericDef)
-    {
-      if (dictObj == null) yield break;
-
-      var dictType = dictObj.GetType();
-      if (!dictType.IsGenericType || dictType.GetGenericTypeDefinition() != genericDef) yield break;
-
-      var args = dictType.GetGenericArguments();
-      if (args.Length != 2 || !args[0].IsEnum || args[1] != typeof(Color)) yield break;
-
-      var getEnumeratorMethod = dictType.GetMethod("GetEnumerator");
-      if (getEnumeratorMethod == null) yield break;
-
-      var enumerator = getEnumeratorMethod.Invoke(dictObj, null);
-      var enumType = enumerator.GetType();
-
-      var moveNext = enumType.GetMethod("MoveNext");
-      var current = enumType.GetProperty("Current");
-      if (moveNext == null || current == null) yield break;
-
-      while ((bool)moveNext.Invoke(enumerator, null))
-      {
-        var kvp = current.GetValue(enumerator);
-        var kvpType = kvp.GetType();
-
-        var keyProp = kvpType.GetProperty("Key");
-        var valueProp = kvpType.GetProperty("Value");
-        if (keyProp == null || valueProp == null) continue;
-
-        var key = keyProp.GetValue(kvp);
-        var value = valueProp.GetValue(kvp);
-
-        yield return new KeyValuePair<object, object>(key, value);
-      }
-
-      if (enumerator is IDisposable disp) disp.Dispose();
-    }
-    
-  }
 }
