@@ -53,7 +53,12 @@ namespace ExtDebugLogger
 
             var providers = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .Where(t => t.IsClass && !t.IsAbstract)
+                .Where(t => t.IsClass && !t.IsAbstract &&
+                            t.GetFields()
+                                .Select(f => f.CustomAttributes
+                                    .FirstOrDefault(ca => ca.AttributeType == typeof(ExtDebugLoggerTags))
+                                )
+                                .First() != null)
                 .ToArray();
 
             foreach (var provider in providers)
