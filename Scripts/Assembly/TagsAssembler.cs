@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using ExtDebugLogger.Attributes;
@@ -55,7 +56,17 @@ namespace ExtDebugLogger
                 .SelectMany(a => a.GetTypes())
                 .Where(t => t.IsClass && !t.IsAbstract &&
                             t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-                                .Any(f => f.GetCustomAttribute<ExtDebugLoggerTagsAttribute>() != null))
+                                .Any(f => 
+                                {
+                                    try
+                                    {
+                                        return f.GetCustomAttribute<ExtDebugLoggerTagsAttribute>() != null;
+                                    }
+                                    catch (FileNotFoundException)
+                                    {
+                                        return false;
+                                    }
+                                }))
                 .ToArray();
 
             foreach (var provider in providers)
