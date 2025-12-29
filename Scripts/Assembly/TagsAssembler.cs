@@ -53,7 +53,7 @@ namespace ExtDebugLogger
 
             var providers = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .Where(t => t.IsClass && !t.IsAbstract && ImplementsGenericInterface(t, openInterfaceType))
+                .Where(t => t.IsClass && !t.IsAbstract)
                 .ToArray();
 
             foreach (var provider in providers)
@@ -76,12 +76,6 @@ namespace ExtDebugLogger
             }
 
             return result;
-        }
-
-        private static bool ImplementsGenericInterface(Type type, Type openInterfaceType)
-        {
-            return type.GetInterfaces()
-                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == openInterfaceType);
         }
 
         private static void CollectFromFields(Type type, BindingFlags flags, object instance, Type openDictType, Dictionary<Enum, Color> result)
