@@ -54,9 +54,9 @@ namespace ExtDebugLogger
             var providers = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(a => a.GetTypes())
                 .Where(t => t.IsClass && !t.IsAbstract &&
-                            t.GetFields()
+                            t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
                                 .Select(f => f.CustomAttributes
-                                    .FirstOrDefault(ca => ca.AttributeType == typeof(ExtDebugLoggerTags))
+                                    .FirstOrDefault(ca => ca.AttributeType == typeof(ExtDebugLoggerTagsAttribute))
                                 )
                                 .First() != null)
                 .ToArray();
@@ -86,7 +86,7 @@ namespace ExtDebugLogger
         private static void CollectFromFields(Type type, BindingFlags flags, object instance, Type openDictType, Dictionary<Enum, Color> result)
         {
             var fields = type.GetFields(flags | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(f => f.GetCustomAttribute<ExtDebugLoggerTags>() != null &&
+                .Where(f => f.GetCustomAttribute<ExtDebugLoggerTagsAttribute>() != null &&
                             IsValidDictionaryType(f.FieldType, openDictType));
 
             foreach (var field in fields)
