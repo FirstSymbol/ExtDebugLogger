@@ -11,8 +11,8 @@
     - From package manager - https://github.com/FirstSymbol/ExtDebugLogger.git
     - From file - download and drop in project folder.
 ## How to use
-0. Go to `Project settings -> Player -> Other Settings -> Script Define Symbols` and add define `DEV` id you need to call Logger in build.
-1. Configure colors:
+1. Go to `Project settings -> Player -> Other Settings -> Script Define Symbols` and add define `DEV` if you need to call Logger in build.
+2. Configure colors:
    - Create default static csharp class and implement interface [IKeepDefaultLoggerTags](./Scripts/Interfaces/IKeepDefaultLoggerTags.cs) or create field
      ```csharp
      [access modifier] static Dictionary<[any enum], UnityEngine.Color> [any name]
@@ -22,7 +22,7 @@
      - This class will be created using reflection, and the color values will be obtained from it after the class is created.
      - <u>**It is important that the empty constructor of the class and all the code inside it will be called when data is received!**</u>
    - Create simple SerializableObject and implement interface [IKeepSerializableLoggerTags](./Scripts/Interfaces/IKeepSerializableLoggerTags.cs) and mark this field with attribute **[ExtDebugLoggerTag]**
-2. Execute static Logger methods with 2 parameters: string, enum. See the examples below.
+3. Execute static Logger methods with 2 parameters: string, enum. See the examples below.
 
 ## Examples
 ### Create SerializableObject config parameters
