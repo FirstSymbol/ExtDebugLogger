@@ -55,17 +55,7 @@ namespace ExtDebugLogger
                 .SelectMany(a => a.GetTypes())
                 .Where(t => t.IsClass && !t.IsAbstract &&
                             t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
-                                .Any(f => 
-                                {
-                                    try
-                                    {
-                                        return f.GetCustomAttribute<ExtDebugLoggerTagsAttribute>() != null;
-                                    }
-                                    catch (Exception)
-                                    {
-                                        return false; // Пропускаем проблемное поле
-                                    }
-                                }))
+                                .Any(f => f.GetCustomAttribute<ExtDebugLoggerTagsAttribute>() != null))
                 .ToArray();
 
             foreach (var provider in providers)
