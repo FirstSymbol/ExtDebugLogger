@@ -17,7 +17,7 @@ namespace ExtDebugLogger
         private static bool IsColoredLogs => true;
         
         [Conditional("DEV"), Conditional("UNITY_EDITOR")]
-        public static void Log(string text, Enum tag = null)
+        public static void Log(object text, Enum tag = null)
         {
             tag = ValidateEnum(tag);
             if (_tagsToExclude.Contains(tag)) return;
@@ -33,7 +33,7 @@ namespace ExtDebugLogger
         }
 
         [Conditional("DEV"), Conditional("UNITY_EDITOR")]
-        public static void Warn(string text, Enum tag = null)
+        public static void Warn(object text, Enum tag = null)
         {
             tag = ValidateEnum(tag);
             if (_tagColors.TryGetValue(tag, out Color color) && IsColoredLogs)
@@ -46,7 +46,7 @@ namespace ExtDebugLogger
             }
         }
 
-        public static void Error(string text, Enum tag = null)
+        public static void Error(object text, Enum tag = null)
         {
             tag = ValidateEnum(tag);
             if (_tagColors.TryGetValue(tag, out Color color) && IsColoredLogs)
