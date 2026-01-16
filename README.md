@@ -4,6 +4,18 @@
 
 ### Supported versions
 - Unity 2022.3.62f2 and later
+## Important
+From assemblies that is start from:
+- UnityEditor.
+- UnityEngine.
+- Unity.
+- System.
+- mscorlib.
+- netstandard.
+- Mono.
+
+colors not collect!!!
+
 ## Installation
 1. Install all dependencies plugins:
     - [ExtInspectorTools](https://github.com/FirstSymbol/ExtInspectorTools);
