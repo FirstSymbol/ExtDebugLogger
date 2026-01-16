@@ -6,12 +6,12 @@
 - Unity 2022.3.62f2 and later
 ## Important
 From assemblies that is start from:
-- UnityEditor.
-- UnityEngine.
+- UnityEditor
+- UnityEngine
 - Unity.
-- System.
-- mscorlib.
-- netstandard.
+- System
+- mscorlib
+- netstandard
 - Mono.
 
 colors not collect!!!
