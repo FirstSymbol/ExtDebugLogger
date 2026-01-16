@@ -63,12 +63,12 @@ namespace ExtDebugLogger
                 {
                     var name = a.GetName().Name;
                     // Пропускаем системные сборки
-                    return !name.StartsWith("UnityEditor.") && 
-                           !name.StartsWith("UnityEngine.") && 
+                    return !name.StartsWith("UnityEditor") && 
+                           !name.StartsWith("UnityEngine") && 
                            !name.StartsWith("Unity.") &&
-                           !name.StartsWith("System.") && 
-                           !name.StartsWith("mscorlib.") &&
-                           !name.StartsWith("netstandard.") &&
+                           !name.StartsWith("System") && 
+                           !name.StartsWith("mscorlib") &&
+                           !name.StartsWith("netstandard") &&
                            !name.StartsWith("Mono.");
                 })
                 .SelectMany(a => a.GetTypes())
