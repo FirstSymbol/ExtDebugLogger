@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -35,6 +36,8 @@ namespace ExtDebugLogger
 
         private static void Initialize()
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             var defaultTags      = CollectTags(DefaultDictType, typeof(IKeepDefaultLoggerTags<>));
             var serializableTags = CollectTags(SerializableDictType, typeof(IKeepSeriaizableLoggerTags<>));
 
@@ -44,15 +47,30 @@ namespace ExtDebugLogger
 
             ColorTags = combined;
 
+            stopwatch.Stop();
+            
             Logger.Log($"{ColorTags.Count} colored tags successfully loaded " +
-                      $"(default & static: {defaultTags.Count}, serializable: {serializableTags.Count}).", LogTag.ExtDebugLogger);
+                      $"(default & static: {defaultTags.Count}, serializable: {serializableTags.Count}).\n" +
+                      $"Execution time {stopwatch.ElapsedMilliseconds} ms.", LogTag.ExtDebugLogger);
         }
 
         private static Dictionary<Enum, Color> CollectTags(Type openDictType, Type openInterfaceType)
         {
             var result = new Dictionary<Enum, Color>();
-
+            
             var providers = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => 
+                {
+                    var name = a.GetName().Name;
+                    // Пропускаем системные сборки
+                    return !name.StartsWith("UnityEditor") && 
+                           !name.StartsWith("UnityEngine") && 
+                           !name.StartsWith("Unity.") &&
+                           !name.StartsWith("System") && 
+                           !name.StartsWith("mscorlib") &&
+                           !name.StartsWith("netstandard") &&
+                           !name.StartsWith("Mono.");
+                })
                 .SelectMany(a => a.GetTypes())
                 .Where(t => t.IsClass && !t.IsAbstract &&
                             t.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)
