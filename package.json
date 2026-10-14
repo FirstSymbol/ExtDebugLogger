@@ -5,6 +5,7 @@
   "documentationUrl": "https://github.com/FirstSymbol/ExtDebugLogger.git",
   "description": "Extended unity debug logger.",
   "homepage": "https://github.com/FirstSymbol/ExtDebugLogger#readme",
+  "license": "MIT",
   "author": {
     "name": "FirstSymbol",
     "url": "https://linkedin.com/in/firstsymbol"
